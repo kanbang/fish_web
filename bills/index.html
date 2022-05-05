@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="./static/index.css">
+    <style>
+        #app {
+            max-width: 800px;
+            margin: auto;
+            background: #b2b5d9;
+            padding: 20px;
+            border-radius: 6px;
+            min-width: 300px;
+            overflow: auto;
+        }
+
+        .el-col {
+            border-radius: 4px;
+        }
+
+        .bg-purple-dark {
+            background: #0014ff;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .bg-purple {
+            background: #3f9eff;
+            color: #fff;
+        }
+
+        .grid-content {
+            border-radius: 4px;
+            min-height: 46px;
+            margin: 10px;
+            text-align: center;
+            line-height: 46px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        p {
+            margin-top: 30px;
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #ffffff;
+
+        }
+
+        .el-input--prefix .el-input__inner {
+            text-align: right;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .el-input-number {
+            width: calc(100% - 20px);
+            margin: 10px;
+        }
+
+        .total {
+            background: #0014ff;
+            margin: 30px 0px 5px;
+            padding: 20px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 26px;
+            line-height: 50px;
+        }
+
+        .total span {
+            font-size: 16px;
+        }
+
+        .total i {
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h3></h3>
+        <p>Bill</p>
+        <el-input placeholder="bill" v-model="bill">
+            <i slot="prefix" class="el-input__icon" style="font-style: normal;font-size: 20px;padding-left: 6px;">$</i>
+        </el-input>
+        <p>Select Tip %</p>
+        <el-row :gutter="10">
+            <el-col :xs="12" :sm="6" :md="6" :lg="4" :xl="4" v-for="item in tipTypes">
+                <div :class="tips==item?'grid-content bg-purple-dark':'grid-content bg-purple'" @click="selectTip(item)">{{item}}</div>
+            </el-col>
+            <el-col :xs="12" :sm="6" :md="6" :lg="8" :xl="8">
+                <el-input-number v-model="customNum" :step="1" v-if="tips=='Custom'" :max="100" :min="0" @change="changeTip"></el-input-number>
+            </el-col>
+        </el-row>
+        <p>Number of People</p>
+        <el-input placeholder="bill" v-model="people">
+            <i slot="prefix" class="el-input__icon el-icon-user"></i>
+        </el-input>
+        <div class="total">
+            <div><span>Tip Amount /Person</span><i>$ {{bill*tip/100/people}}</i></div>
+            <div><span>Total /Person</span><i>$ {{(bill*tip/100+Number(bill))/people}}</i></div>
+        </div>
+    </div>
+</body>
+<script src="./static/vue.js"></script>
+<script src="./static/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                tipTypes: ['5%', '10%', '15%', '25%', '50%', 'Custom'],
+                bill: 0,
+                tip: 5,
+                tips: '5%',
+                customNum: 0,
+                people: 1,
+                TipPer: 0,
+                TotalPer: 0
+            }
+        },
+        methods: {
+            selectTip(tip) {
+                this.tips = tip;
+                this.tip = parseInt(tip);
+                if (isNaN(this.tip)) {
+                    this.tip = this.customNum
+                }
+            },
+            changeTip(val) {
+                this.tip = parseInt(val);
+            }
+        }
+    })
+</script>
+
+</html>
