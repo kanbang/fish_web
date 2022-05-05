@@ -89,7 +89,7 @@
         </el-input>
         <p>Select Tip %</p>
         <el-row :gutter="10">
-            <el-col :xs="12" :sm="6" :md="6" :lg="4" :xl="4" v-for="item in tipTypes">
+            <el-col :xs="12" :sm="6" :md="6" :lg="4" :xl="4" v-for="item in tipTypes" :key="item">
                 <div :class="tips==item?'grid-content bg-purple-dark':'grid-content bg-purple'" @click="selectTip(item)">{{item}}</div>
             </el-col>
             <el-col :xs="12" :sm="6" :md="6" :lg="8" :xl="8">
@@ -101,8 +101,8 @@
             <i slot="prefix" class="el-input__icon el-icon-user"></i>
         </el-input>
         <div class="total">
-            <div><span>Tip Amount /Person</span><i>$ {{bill*tip/100/people}}</i></div>
-            <div><span>Total /Person</span><i>$ {{(bill*tip/100+Number(bill))/people}}</i></div>
+            <div><span>Tip Amount /Person</span><i>$ {{Math.floor(bill*tip/100/people*100)/100}}</i></div>
+            <div><span>Total /Person</span><i>$ {{Math.floor((bill*tip/100+Number(bill)/people)*100)/100}}</i></div>
         </div>
     </div>
 </body>
@@ -119,8 +119,6 @@
                 tips: '5%',
                 customNum: 0,
                 people: 1,
-                TipPer: 0,
-                TotalPer: 0
             }
         },
         methods: {
