@@ -1,0 +1,198 @@
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>range</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+		name="viewport" />
+</head>
+<style>
+	.province {
+		stroke: black;
+		stroke-width: 1px;
+	}
+
+	svg {
+		border: 1px solid black;
+	}
+
+	text {
+		text-anchor: middle;
+		pointer-events: none;
+	}
+
+	.tooltip {
+		font-family: simsun;
+		font-size: 16px;
+		min-width: 120;
+		height: auto;
+		position: absolute;
+		text-align: center;
+		border-style: solid;
+		border-width: 1px;
+		background-color: white;
+		border-radius: 5px;
+		opacity: 0;
+		padding: 10px;
+	}
+</style>
+
+<body>
+	<script src='/d3.min.js'></script>
+	<script src='/topojson.js'></script>
+	<script>
+		const trim = (str, chars) => str.split(chars).filter(Boolean).join(chars);
+
+		function csvToJson(filePath) {
+			let result = []
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", filePath, false);
+			xhr.onload = function (e) {
+				if (xhr.readyState === 4) {
+					if (xhr.status === 200) {
+						result = csvJSON(xhr.responseText)
+					} else {
+						console.error(xhr.statusText);
+					}
+				}
+			};
+			xhr.send(null);
+			return result
+		}
+
+		function csvJSON(csv) {
+			var data = {}
+			var lines = csv.split("\n");
+
+			// var result = [];
+
+			var headers = lines[0].split(",");
+
+			for (var i = 1; i < lines.length; i++) {
+				// var obj = {};
+				var currentline = lines[i].split(",");
+
+				var country = currentline[12];
+				try {
+					var profit = parseFloat(trim(currentline[8], '$'));
+
+					if (data[country]) {
+						data[country] += profit;
+					} else {
+						data[country] = profit;
+					}
+				} catch (error) {}
+
+				// for (var j = 0; j < headers.length; j++) {
+				// 	obj[headers[j]] = currentline[j];
+				// }
+
+				// result.push(obj);
+			}
+
+			return data;
+		}
+
+		var width = document.body.clientWidth;
+		var height = document.body.clientHeight;
+		var padding = 50;
+		var innerWidth = width - 2 * padding;
+		var innerHeight = height - 2 * padding;
+
+		var svg = d3.select("body").append("svg")
+			.attr('width', innerWidth)
+			.attr('height', innerHeight)
+			.attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+		var tooltip = d3.select("body").append("div")
+			.attr("class", "tooltip")
+			.attr("opacity", 0.0);
+
+		// var projection = d3.geoOrthographic()
+		var projection = d3.geoMercator()
+
+		
+		var path = d3.geoPath().projection(projection);
+		var root;
+
+		window.addEventListener('resize', function () {
+			width = document.body.clientWidth;
+			height = document.body.clientHeight;
+			innerWidth = width - 2 * padding;
+			innerHeight = height - 2 * padding;
+
+			svg.attr('width', innerWidth)
+				.attr('height', innerHeight)
+				.attr('transform', 'translate(' + padding + ',' + padding + ')')
+
+			projection.fitSize([innerWidth, innerHeight], root)
+
+			svg.selectAll("path").attr("d", path);
+		})
+
+
+
+		d3.json("countries-110m.json").then(function (toporoot) {
+			root = topojson.feature(toporoot, toporoot.objects.countries);
+			projection.fitSize([innerWidth, innerHeight], root)
+			console.log(toporoot, root)
+
+			//路径分组元素
+			var g = svg.append("g");
+
+			//路径元素
+			var provinces = g.selectAll("path")
+				.data(root.features)
+				.enter()
+				.append("path")
+				.attr("class", "province")
+				.attr("stroke", "#000")
+				.attr("stroke-width", 1)
+				.attr("fill", "royalblue")
+				.attr("d", path)
+
+			svg.selectAll("text")
+				.data(root.features)
+				.enter()
+				.append("text")
+				.text(function (d, i) {
+					return d.properties.name
+				})
+				.attr("fill", "black")
+				.attr("x", function (d) {
+					return path.centroid(d)[0];
+				})
+				.attr("y", function (d) {
+					return path.centroid(d)[1];
+				})
+				.style("font-size", "10px")
+
+			var values = csvToJson('ecommerce.csv');
+
+			provinces.on("mousemove", function (d, i) {
+					d3.select(this)
+						.attr("fill", "crimson");
+
+					var x = d3.event.pageX;
+					var y = d3.event.pageY + 30;
+
+					var profit = values[d.properties.name];
+
+					tooltip.html(d.properties.name + ": $" + (profit ? profit.toFixed(2) : "0"))
+						.style("left", x + "px")
+						.style("top", y + "px")
+						.style("opacity", 1.0);
+				})
+				.on("mouseout", function (d, i) {
+					d3.select(this)
+						.attr("fill", "royalblue");
+					tooltip.style("opacity", 0.0);
+				});
+		}).catch(function () {
+			console.log('err1');
+		});
+	</script>
+
+</body>
+
+</html>
